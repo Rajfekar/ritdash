@@ -1,5 +1,6 @@
 import type { AppProps } from "next/app"
 import type { Page } from "../types/types"
+import "../styles/globals.css"
 import React from "react"
 import { LayoutProvider } from "../layout/context/layoutcontext"
 import Layout from "../layout/layout"
