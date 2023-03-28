@@ -21,7 +21,7 @@ import { ProductService } from "../../../demo/service/ProductService"
 import { Dropdown } from "primereact/dropdown"
 import { Demo } from "../../../types/types"
 import Image from "next/image"
-import jsPDF from "jspdf"
+import jsPDF, { AcroFormCheckBox } from "jspdf"
 import "jspdf-autotable"
 declare module "jspdf" {
   interface jsPDF {
@@ -85,7 +85,8 @@ const Index = () => {
     image: "",
     sem: "",
   }
-  const [dropdownValue, setDropdownValue] = useState(null)
+  const [dropdownValue1, setDropdownValue1] = useState(null)
+  const [dropdownValue2, setDropdownValue2] = useState(null)
   const [products, setProducts] = useState<Demo.Product[]>([])
   const [productDialog, setProductDialog] = useState(false)
   const [deleteProductDialog, setDeleteProductDialog] = useState(false)
@@ -134,7 +135,6 @@ const Index = () => {
       let _product = { ...product }
       if (product.id) {
         const index = findIndexById(product.id)
-
         _products[index] = _product
         toast.current?.show({
           severity: "success",
@@ -143,6 +143,8 @@ const Index = () => {
           life: 3000,
         })
       } else {
+        // let id = `RIT${product}`
+        // console.log(products[-1])
         _product.id = createId()
         _product.image = "product-placeholder.svg"
         _products.push(_product)
@@ -196,6 +198,7 @@ const Index = () => {
   }
 
   const createId = () => {
+    product.length()
     let id = ""
     let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     for (let i = 0; i < 5; i++) {
@@ -488,16 +491,22 @@ const Index = () => {
       />
     </>
   )
+
   type InputValue = {
     name: string
-    code: string
+    code: number
   }
-  const dropdownValues: InputValue[] = [
-    { name: "STUDENT", code: "NY" },
-    { name: "FACULTY", code: "RM" },
-    { name: "LIBRARY", code: "LDN" },
-    { name: "EMP", code: "IST" },
-    { name: "OTHER", code: "PRS" },
+  const dropdownValues1: InputValue[] = [
+    { name: "STUDENT", code: 0 },
+    { name: "FACULTY", code: 1 },
+    { name: "EMPLOYEE", code: 2 },
+    { name: "LIBRARY", code: 3 },
+  ]
+  const dropdownValues2: InputValue[] = [
+    { name: "CSE", code: 0 },
+    { name: "FACULTY", code: 1 },
+    { name: "EMPLOYEE", code: 2 },
+    { name: "LIBRARY", code: 3 },
   ]
   return (
     <div className="grid crud-demo">
@@ -597,13 +606,29 @@ const Index = () => {
             onHide={hideDialog}
           >
             {product.image && (
-              <img
-                src={`${contextPath}/demo/images/product/${product.image}`}
-                alt={product.image}
-                width="150"
-                className="mt-0 mx-auto mb-5 block shadow-2"
-              />
+              <>
+                <img
+                  src={`${contextPath}/demo/images/product/${product.image}`}
+                  alt={product.image}
+                  width="150"
+                  className="mt-0 mx-auto mb-5 block shadow-2"
+                />
+                <div className="field">
+                  {product.status && (
+                    <InputText
+                      id="status"
+                      value={product.status.toString()}
+                      onChange={(e) => onInputChange(e, "status")}
+                      required
+                      className={classNames({
+                        "p-invalid": submitted && !product.status,
+                      })}
+                    />
+                  )}
+                </div>
+              </>
             )}
+
             <div className="field">
               <label htmlFor="libid">LibraryID</label>
               <InputText
@@ -627,7 +652,6 @@ const Index = () => {
                 value={product.name}
                 onChange={(e) => onInputChange(e, "name")}
                 required
-                autoFocus
                 className={classNames({
                   "p-invalid": submitted && !product.name,
                 })}
@@ -639,80 +663,39 @@ const Index = () => {
             <div className="field">
               <label htmlFor="type">Type</label>
               <Dropdown
-                value={dropdownValue}
-                onChange={(e) => setDropdownValue(e.value)}
-                options={dropdownValues}
+                id="type"
+                value={dropdownValue1}
+                onChange={(e) => setDropdownValue1(e.value)}
+                options={dropdownValues1}
                 optionLabel="name"
                 placeholder="Select"
               />
             </div>
-
             <div className="field">
-              <label className="mb-3">Category</label>
-              <div className="formgrid grid">
-                <div className="field-radiobutton col-6">
-                  <RadioButton
-                    inputId="category1"
-                    name="category"
-                    value="Accessories"
-                    onChange={onCategoryChange}
-                    checked={product.category === "Accessories"}
-                  />
-                  <label htmlFor="category1">Accessories</label>
-                </div>
-                <div className="field-radiobutton col-6">
-                  <RadioButton
-                    inputId="category2"
-                    name="category"
-                    value="Clothing"
-                    onChange={onCategoryChange}
-                    checked={product.category === "Clothing"}
-                  />
-                  <label htmlFor="category2">Clothing</label>
-                </div>
-                <div className="field-radiobutton col-6">
-                  <RadioButton
-                    inputId="category3"
-                    name="category"
-                    value="Electronics"
-                    onChange={onCategoryChange}
-                    checked={product.category === "Electronics"}
-                  />
-                  <label htmlFor="category3">Electronics</label>
-                </div>
-                <div className="field-radiobutton col-6">
-                  <RadioButton
-                    inputId="category4"
-                    name="category"
-                    value="Fitness"
-                    onChange={onCategoryChange}
-                    checked={product.category === "Fitness"}
-                  />
-                  <label htmlFor="category4">Fitness</label>
-                </div>
-              </div>
+              <label htmlFor="branch">Branch</label>
+              <Dropdown
+                id="branch"
+                value={dropdownValue2}
+                onChange={(e) => setDropdownValue2(e.value)}
+                options={dropdownValues2}
+                optionLabel="name"
+                placeholder="Select"
+              />
             </div>
-
-            <div className="formgrid grid">
-              <div className="field col">
-                <label htmlFor="price">Price</label>
-                <InputNumber
-                  id="price"
-                  value={product.price}
-                  onValueChange={(e) => onInputNumberChange(e, "price")}
-                  mode="currency"
-                  currency="USD"
-                  locale="en-US"
-                />
-              </div>
-              <div className="field col">
-                <label htmlFor="quantity">Quantity</label>
-                <InputNumber
-                  id="quantity"
-                  value={product.quantity}
-                  onValueChange={(e) => onInputNumberChange(e, "quantity")}
-                />
-              </div>
+            <div className="field">
+              <label htmlFor="mobile">Mobile</label>
+              <InputText
+                id="mobile"
+                value={product.mobile.toString()}
+                onChange={(e) => onInputChange(e, "mobile")}
+                required
+                className={classNames({
+                  "p-invalid": submitted && !product.mobile,
+                })}
+              />
+              {submitted && !product.mobile && (
+                <small className="p-invalid">Mobile is required.</small>
+              )}
             </div>
           </Dialog>
 
