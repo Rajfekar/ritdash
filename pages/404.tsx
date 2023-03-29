@@ -1,13 +1,9 @@
 import React from "react"
-import NotFound from "../pages/pages/notfound/index"
-import { Page } from "../types/types"
 
-const Custom404: Page = () => {
-  return <NotFound />
+type Props = {}
+
+const Error404 = (props: Props) => {
+  return <div>404</div>
 }
 
-Custom404.getLayout = function getLayout(page) {
-  return page
-}
-
-export default Custom404
+export default Error404
