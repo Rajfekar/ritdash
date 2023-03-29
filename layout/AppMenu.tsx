@@ -13,7 +13,7 @@ const AppMenu = () => {
   const model: AppMenuItem[] = [
     {
       label: "Home",
-      items: [{ label: "Dashboard", icon: "pi pi-fw pi-home", to: "/" }],
+      items: [{ label: "Dashboard", icon: "pi pi-fw pi-home", to: "/libdash" }],
     },
     {
       label: "Tools",
@@ -21,27 +21,27 @@ const AppMenu = () => {
         {
           label: "Members",
           icon: "pi pi-fw pi-users",
-          to: "/pages/members",
+          to: "/libdash/members",
         },
         {
           label: "Books",
           icon: "pi pi-fw pi-book",
-          to: "/pages/books",
+          to: "/libdash/books",
         },
         {
           label: "Issue Book",
           icon: "pi pi-fw pi-id-card",
-          to: "/pages/issuebook",
+          to: "/libdash/issuebook",
         },
         {
           label: "Attendance",
           icon: "pi pi-fw pi-check-square",
-          to: "/pages/attendance",
+          to: "/libdash/attendance",
         },
         {
           label: "Scanner",
           icon: "pi pi-fw pi-camera",
-          to: "/pages/scanner",
+          to: "/libdash/scanner",
         },
       ],
     },

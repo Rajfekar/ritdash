@@ -143,15 +143,14 @@ const Index = () => {
           life: 3000,
         })
       } else {
-        // let id = `RIT${product}`
-        // console.log(products[-1])
-        _product.id = createId()
+        let id = products.length + 1
+        _product.id = id.toString()
         _product.image = "product-placeholder.svg"
         _products.push(_product)
         toast.current?.show({
           severity: "success",
           summary: "Successful",
-          detail: "Product Created",
+          detail: "Member Added",
           life: 3000,
         })
       }

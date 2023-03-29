@@ -102,7 +102,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
   }
   return (
     <div className="layout-topbar">
-      <Link href="/" className="layout-topbar-logo">
+      <Link href="/libdash" className="layout-topbar-logo">
         <img
           src={`${contextPath}/layout/images/logo-${
             layoutConfig.colorScheme !== "light" ? "white" : "dark"
@@ -125,7 +125,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
       </button>
       {menuItems && (
         <span className="hidden xl:inline-block">
-          <Link href={"/"}>
+          <Link href={"/libdash"}>
             <button
               className="p-link layout-menu-button layout-topbar-button"
               type="button"
@@ -134,7 +134,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
               <i className=" pi pi-home" />
             </button>
           </Link>
-          <Link href={"/pages/members"}>
+          <Link href={"/libdash/members"}>
             <button
               className="p-link layout-menu-button layout-topbar-button"
               type="button"
@@ -143,7 +143,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
               <i className=" pi pi-users" />
             </button>
           </Link>
-          <Link href={"/pages/books"}>
+          <Link href={"/libdash/books"}>
             <button
               className="p-link layout-menu-button layout-topbar-button"
               type="button"
@@ -152,7 +152,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
               <i className=" pi pi-book" />
             </button>
           </Link>
-          <Link href={"/pages/attendance"}>
+          <Link href={"/libdash/attendance"}>
             <button
               className="p-link layout-menu-button layout-topbar-button"
               type="button"
@@ -161,7 +161,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
               <i className=" pi pi-check-square" />
             </button>
           </Link>
-          <Link href={"/pages/scanner"}>
+          <Link href={"/libdash/scanner"}>
             <button
               className="p-link layout-menu-button layout-topbar-button"
               type="button"
