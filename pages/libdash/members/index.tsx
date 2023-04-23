@@ -1,5 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
 import getConfig from "next/config"
+import { firestore } from "../../../firebase"
+import { onValue, ref } from "firebase/database"
+import firebase from "firebase/app"
+import "firebase/firestore"
+import {
+  doc,
+  setDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  limit,
+  onSnapshotsInSync,
+  QuerySnapshot,
+} from "firebase/firestore"
 import { Button } from "primereact/button"
 import { Column } from "primereact/column"
 import { DataTable } from "primereact/datatable"
@@ -23,11 +38,20 @@ import { Demo } from "../../../types/types"
 import Image from "next/image"
 import jsPDF, { AcroFormCheckBox } from "jspdf"
 import "jspdf-autotable"
+import { SemanticClassificationFormat } from "typescript"
+import { type } from "os"
+import { SortOrder } from "primereact/api"
+import Layout from "@/layout/layout"
+import { error } from "console"
+import axios from "@/lib/axios"
+import { useSWRConfig } from "swr"
+import getData from "@/lib/axios"
 declare module "jspdf" {
   interface jsPDF {
     autoTable: (config: any) => jsPDF
   }
 }
+
 const Index = () => {
   // get user type
   const memberType: {
@@ -78,10 +102,10 @@ const Index = () => {
     mobile: "",
     email: "",
     gender: "",
-    type: 0,
+    type: "",
     course: "",
     status: "",
-    branch: 0,
+    branch: "",
     image: "",
     sem: "",
   }
@@ -98,10 +122,71 @@ const Index = () => {
   const toast = useRef<Toast>(null)
   const dt = useRef<DataTable<Demo.Product[]>>(null)
   const contextPath = getConfig().publicRuntimeConfig.contextPath
-
   useEffect(() => {
-    const productService = new ProductService()
-    productService.getProducts().then((data) => setProducts(data))
+    // const fetchData = async () => {
+    //   const snapshot = await firestore.collection("attendances").get()
+    //   const newData = snapshot.docs.map((doc) => doc.data())
+    //   setData(newData)
+    // }
+    // fetchData()
+    // Add a new document to a collection
+    // firestore
+    //   .collection("users")
+    //   .add({
+    //     name: "John Doe",
+    //     age: 25,
+    //     email: "john.doe@example.com",
+    //   })
+    //   .then((docRef) => {
+    //     console.log("Document written with ID: ", docRef.id)
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error adding document: ", error)
+    //   })
+    //   const q = query(collection(db, "attendances"))
+    //   onSnapshot(q, (QuerySnapshot) => {
+    //     QuerySnapshot.forEach((doc) => {
+    //       console.log(doc.id)
+    //       console.log(doc.data())
+    //     })
+    //   })
+    // const q = query(collection(db, "members"))
+    // onSnapshot(q, (querySnapshot) => {
+    //   console.log(product)
+    //   let data: Demo.Product[] = []
+    //   querySnapshot.forEach((doc) => {
+    //     console.log(doc.data())
+    //     let objmember: Demo.Product = {
+    //       id: doc.data().id.toString(),
+    //       name: doc.data().name.toString(),
+    //       libid: doc.data().libid.toString(),
+    //       type: doc.data().type.toString(),
+    //       branch: doc.data().branch.toString(),
+    //       course: doc.data().course.toString(),
+    //       email: doc.data().email.toString(),
+    //       mobile: doc.data().mobile.toString(),
+    //       sem: doc.data().sem.toString(),
+    //       status: doc.data().status.toString(),
+    //     }
+    //     data.push(objmember)
+    //   })
+    //   // console.log(products)
+    //   // console.log(typeof products)
+    //   // setProducts(data)
+    //   // data = []
+    //   // console.log(data)
+    //   // console.log(products)
+    //   // console.log(typeof products)
+    // })
+  }, [])
+  useEffect(() => {
+    async function fetchData() {
+      const result = await getData()
+      console.log(result)
+      setProducts(result)
+    }
+
+    fetchData()
   }, [])
 
   const formatCurrency = (value: number) => {
@@ -155,7 +240,7 @@ const Index = () => {
         })
       }
 
-      setProducts(_products)
+      // setProducts(_products)
       setProductDialog(false)
       setProduct(emptyProduct)
     }
@@ -173,7 +258,7 @@ const Index = () => {
 
   const deleteProduct = () => {
     let _products = products.filter((val) => val.id !== product.id)
-    setProducts(_products)
+    // setProducts(_products)
     setDeleteProductDialog(false)
     setProduct(emptyProduct)
     toast.current?.show({
@@ -250,7 +335,7 @@ const Index = () => {
 
   const deleteSelectedProducts = () => {
     let _products = products.filter((val) => !selectedProducts?.includes(val))
-    setProducts(_products)
+    // setProducts(_products)
     setDeleteProductsDialog(false)
     setSelectedProducts([])
     toast.current?.show({
@@ -274,7 +359,6 @@ const Index = () => {
     const val = (e.target && e.target.value) || ""
     let _product = { ...product }
     _product[`${name}`] = val
-
     setProduct(_product)
   }
 
@@ -386,7 +470,7 @@ const Index = () => {
     return (
       <>
         <span className="p-column-title">Type</span>
-        {getType(rowData.type)}
+        {getType(Number(rowData.type))}
       </>
     )
   }
@@ -395,14 +479,14 @@ const Index = () => {
     return (
       <>
         <span className="p-column-title">Branch</span>
-        {getBranch(rowData.branch)}
+        {getBranch(Number(rowData.branch))}
       </>
     )
   }
 
   const statusBodyTemplate = (rowData: Demo.Product) => {
-    const status = rowData.status == 0 ? "Active" : "DeActive"
-    const status2 = rowData.status == 0 ? "instock" : "outofstock"
+    const status = rowData.status == "0" ? "Active" : "DeActive"
+    const status2 = rowData.status == "0" ? "instock" : "outofstock"
     return (
       <>
         <span className="p-column-title">Status</span>
@@ -503,239 +587,242 @@ const Index = () => {
   ]
   const dropdownValues2: InputValue[] = [
     { name: "CSE", code: 0 },
-    { name: "FACULTY", code: 1 },
-    { name: "EMPLOYEE", code: 2 },
-    { name: "LIBRARY", code: 3 },
+    { name: "CIVIL", code: 1 },
+    { name: "MECH", code: 2 },
+    { name: "ET&T", code: 3 },
   ]
+
   return (
-    <div className="grid crud-demo">
-      <div className="col-12">
-        <div className="card">
-          <Toast ref={toast} />
-          <Toolbar
-            className="mb-4"
-            left={leftToolbarTemplate}
-            right={rightToolbarTemplate}
-          ></Toolbar>
+    <>
+      <div className="grid crud-demo">
+        <div className="col-12">
+          <div className="card">
+            <Toast ref={toast} />
+            <Toolbar
+              className="mb-4"
+              left={leftToolbarTemplate}
+              right={rightToolbarTemplate}
+            ></Toolbar>
 
-          <DataTable
-            ref={dt}
-            value={products}
-            selection={selectedProducts}
-            onSelectionChange={(e) =>
-              setSelectedProducts(e.value as Demo.Product[])
-            }
-            dataKey="id"
-            paginator
-            rows={10}
-            rowsPerPageOptions={[10, 20, 50, 100]}
-            className="datatable-responsive"
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} Users"
-            globalFilter={globalFilter}
-            emptyMessage="No Users found."
-            header={header}
-            responsiveLayout="scroll"
-          >
-            {/* <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column> */}
-            <Column
-              field="id"
-              header="N"
-              sortable
-              body={idBodyTemplate}
-              headerStyle={{ minWidth: "5rem" }}
-            ></Column>
-            <Column
-              field="libid"
-              header="LibraryID"
-              sortable
-              body={libidBodyTemplate}
-              headerStyle={{ minWidth: "8rem" }}
-            ></Column>
-            <Column header="Image" body={imageBodyTemplate}></Column>
-            <Column
-              field="name"
-              header="Name"
-              sortable
-              body={nameBodyTemplate}
-              headerStyle={{ minWidth: "15rem" }}
-            ></Column>
-            <Column
-              field="type"
-              header="Type"
-              sortable
-              body={typeBodyTemplate}
-              headerStyle={{ minWidth: "6rem" }}
-            ></Column>
+            <DataTable
+              ref={dt}
+              value={products}
+              selection={selectedProducts}
+              onSelectionChange={(e) =>
+                setSelectedProducts(e.value as Demo.Product[])
+              }
+              dataKey="id"
+              paginator
+              rows={10}
+              rowsPerPageOptions={[10, 20, 50, 100]}
+              className="datatable-responsive"
+              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} Users"
+              globalFilter={globalFilter}
+              emptyMessage="No Users found."
+              header={header}
+              responsiveLayout="scroll"
+            >
+              {/* <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column> */}
+              <Column
+                field="id"
+                header="N"
+                sortable
+                body={idBodyTemplate}
+                headerStyle={{ minWidth: "5rem" }}
+              ></Column>
+              <Column
+                field="libid"
+                header="LibraryID"
+                sortable
+                body={libidBodyTemplate}
+                headerStyle={{ minWidth: "8rem" }}
+              ></Column>
+              <Column header="Image" body={imageBodyTemplate}></Column>
+              <Column
+                field="name"
+                header="Name"
+                sortable
+                body={nameBodyTemplate}
+                headerStyle={{ minWidth: "15rem" }}
+              ></Column>
+              <Column
+                field="type"
+                header="Type"
+                sortable
+                body={typeBodyTemplate}
+                headerStyle={{ minWidth: "6rem" }}
+              ></Column>
 
-            <Column
-              field="branch"
-              header="Branch"
-              body={branchBodyTemplate}
-              sortable
-            ></Column>
+              <Column
+                field="branch"
+                header="Branch"
+                body={branchBodyTemplate}
+                sortable
+              ></Column>
 
-            <Column
-              field="mobile"
-              header="Mobile"
-              body={mobileBodyTemplate}
-              sortable
-            ></Column>
+              <Column
+                field="mobile"
+                header="Mobile"
+                body={mobileBodyTemplate}
+                sortable
+              ></Column>
 
-            <Column
-              field="status"
-              header="Status"
-              body={statusBodyTemplate}
-              sortable
-              headerStyle={{ minWidth: "5rem" }}
-            ></Column>
-            <Column
-              body={actionBodyTemplate}
-              headerStyle={{ minWidth: "10rem" }}
-            ></Column>
-          </DataTable>
+              <Column
+                field="status"
+                header="Status"
+                body={statusBodyTemplate}
+                sortable
+                headerStyle={{ minWidth: "5rem" }}
+              ></Column>
+              <Column
+                body={actionBodyTemplate}
+                headerStyle={{ minWidth: "10rem" }}
+              ></Column>
+            </DataTable>
 
-          <Dialog
-            visible={productDialog}
-            style={{ width: "450px" }}
-            header="Member Details"
-            modal
-            className="p-fluid"
-            footer={productDialogFooter}
-            onHide={hideDialog}
-          >
-            {product.image && (
-              <>
-                <img
-                  src={`${contextPath}/demo/images/product/${product.image}`}
-                  alt={product.image}
-                  width="150"
-                  className="mt-0 mx-auto mb-5 block shadow-2"
+            <Dialog
+              visible={productDialog}
+              style={{ width: "450px" }}
+              header="Member Details"
+              modal
+              className="p-fluid"
+              footer={productDialogFooter}
+              onHide={hideDialog}
+            >
+              {product.image && (
+                <>
+                  <img
+                    src={`${contextPath}/demo/images/product/${product.image}`}
+                    alt={product.image}
+                    width="150"
+                    className="mt-0 mx-auto mb-5 block shadow-2"
+                  />
+                  <div className="field">
+                    {product.status && (
+                      <InputText
+                        id="status"
+                        value={product.status.toString()}
+                        onChange={(e) => onInputChange(e, "status")}
+                        required
+                        className={classNames({
+                          "p-invalid": submitted && !product.status,
+                        })}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+
+              <div className="field">
+                <label htmlFor="libid">LibraryID</label>
+                <InputText
+                  id="libid"
+                  value={product.libid}
+                  onChange={(e) => onInputChange(e, "libid")}
+                  required
+                  autoFocus
+                  className={classNames({
+                    "p-invalid": submitted && !product.libid,
+                  })}
                 />
-                <div className="field">
-                  {product.status && (
-                    <InputText
-                      id="status"
-                      value={product.status.toString()}
-                      onChange={(e) => onInputChange(e, "status")}
-                      required
-                      className={classNames({
-                        "p-invalid": submitted && !product.status,
-                      })}
-                    />
-                  )}
-                </div>
-              </>
-            )}
+                {submitted && !product.libid && (
+                  <small className="p-invalid">LibraryID is required.</small>
+                )}
+              </div>
+              <div className="field">
+                <label htmlFor="name">Name</label>
+                <InputText
+                  id="name"
+                  value={product.name}
+                  onChange={(e) => onInputChange(e, "name")}
+                  required
+                  className={classNames({
+                    "p-invalid": submitted && !product.name,
+                  })}
+                />
+                {submitted && !product.name && (
+                  <small className="p-invalid">Name is required.</small>
+                )}
+              </div>
+              <div className="field">
+                <label htmlFor="type">Type</label>
+                <Dropdown
+                  id="type"
+                  value={dropdownValue1}
+                  onChange={(e) => setDropdownValue1(e.value)}
+                  options={dropdownValues1}
+                  optionLabel="name"
+                  placeholder="Select"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="branch">Branch</label>
+                <Dropdown
+                  id="branch"
+                  value={dropdownValue2}
+                  onChange={(e) => setDropdownValue2(e.value)}
+                  options={dropdownValues2}
+                  optionLabel="name"
+                  placeholder="Select"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="mobile">Mobile</label>
+                <InputText
+                  id="mobile"
+                  value={product.mobile.toString()}
+                  onChange={(e) => onInputChange(e, "mobile")}
+                  required
+                  className={classNames({
+                    "p-invalid": submitted && !product.mobile,
+                  })}
+                />
+                {submitted && !product.mobile && (
+                  <small className="p-invalid">Mobile is required.</small>
+                )}
+              </div>
+            </Dialog>
 
-            <div className="field">
-              <label htmlFor="libid">LibraryID</label>
-              <InputText
-                id="libid"
-                value={product.libid}
-                onChange={(e) => onInputChange(e, "libid")}
-                required
-                autoFocus
-                className={classNames({
-                  "p-invalid": submitted && !product.libid,
-                })}
-              />
-              {submitted && !product.libid && (
-                <small className="p-invalid">LibraryID is required.</small>
-              )}
-            </div>
-            <div className="field">
-              <label htmlFor="name">Name</label>
-              <InputText
-                id="name"
-                value={product.name}
-                onChange={(e) => onInputChange(e, "name")}
-                required
-                className={classNames({
-                  "p-invalid": submitted && !product.name,
-                })}
-              />
-              {submitted && !product.name && (
-                <small className="p-invalid">Name is required.</small>
-              )}
-            </div>
-            <div className="field">
-              <label htmlFor="type">Type</label>
-              <Dropdown
-                id="type"
-                value={dropdownValue1}
-                onChange={(e) => setDropdownValue1(e.value)}
-                options={dropdownValues1}
-                optionLabel="name"
-                placeholder="Select"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="branch">Branch</label>
-              <Dropdown
-                id="branch"
-                value={dropdownValue2}
-                onChange={(e) => setDropdownValue2(e.value)}
-                options={dropdownValues2}
-                optionLabel="name"
-                placeholder="Select"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="mobile">Mobile</label>
-              <InputText
-                id="mobile"
-                value={product.mobile.toString()}
-                onChange={(e) => onInputChange(e, "mobile")}
-                required
-                className={classNames({
-                  "p-invalid": submitted && !product.mobile,
-                })}
-              />
-              {submitted && !product.mobile && (
-                <small className="p-invalid">Mobile is required.</small>
-              )}
-            </div>
-          </Dialog>
+            <Dialog
+              visible={deleteProductDialog}
+              style={{ width: "450px" }}
+              header="Confirm"
+              modal
+              footer={deleteProductDialogFooter}
+              onHide={hideDeleteProductDialog}
+            >
+              <div className="flex align-items-center justify-content-center">
+                <i className="pi pi-exclamation-triangle mr-3" />
+                {product && (
+                  <span>
+                    Are you sure you want to delete <b>{product.name}</b>?
+                  </span>
+                )}
+              </div>
+            </Dialog>
 
-          <Dialog
-            visible={deleteProductDialog}
-            style={{ width: "450px" }}
-            header="Confirm"
-            modal
-            footer={deleteProductDialogFooter}
-            onHide={hideDeleteProductDialog}
-          >
-            <div className="flex align-items-center justify-content-center">
-              <i className="pi pi-exclamation-triangle mr-3" />
-              {product && (
-                <span>
-                  Are you sure you want to delete <b>{product.name}</b>?
-                </span>
-              )}
-            </div>
-          </Dialog>
-
-          <Dialog
-            visible={deleteProductsDialog}
-            style={{ width: "450px" }}
-            header="Confirm"
-            modal
-            footer={deleteProductsDialogFooter}
-            onHide={hideDeleteProductsDialog}
-          >
-            <div className="flex align-items-center justify-content-center">
-              <i className="pi pi-exclamation-triangle mr-3" />
-              {product && (
-                <span>
-                  Are you sure you want to delete the selected products?
-                </span>
-              )}
-            </div>
-          </Dialog>
+            <Dialog
+              visible={deleteProductsDialog}
+              style={{ width: "450px" }}
+              header="Confirm"
+              modal
+              footer={deleteProductsDialogFooter}
+              onHide={hideDeleteProductsDialog}
+            >
+              <div className="flex align-items-center justify-content-center">
+                <i className="pi pi-exclamation-triangle mr-3" />
+                {product && (
+                  <span>
+                    Are you sure you want to delete the selected products?
+                  </span>
+                )}
+              </div>
+            </Dialog>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
